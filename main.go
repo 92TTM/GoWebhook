@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
@@ -16,7 +17,7 @@ func main() {
 	fmt.Println("Hello World")
 	log.Println("Bot:", bot, " err:", err)
 	http.HandleFunc("/callback", callbackHandler)
-	port := "80"
+	port := os.Getenv("port")
 	addr := fmt.Sprintf(":%s", port)
 	fmt.Println(addr)
 	http.ListenAndServe(addr, nil)
