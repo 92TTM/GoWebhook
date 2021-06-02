@@ -16,11 +16,9 @@ func main() {
 	bot, err = linebot.New("4bd0bc91b1cca5fb1c0a621d856b31fa", "M6fBGbOHaSl0MBDC52eLH1kZrkB54aJxd2vQsk89Lpo5YhR+tzM4cOqtYrow6vQFpq1G4/kxA6iv++CehbPchvdLh4k2DPx2Ozmhpl8zi4+RYE8xanKnplRi7js1DrqfiBuyJm3IzznIXIsDbkGwtAdB04t89/1O/w1cDnyilFU=")
 	log.Println("Bot:", bot, " err:", err)
 	http.HandleFunc("/callback", callbackHandler)
-	port := os.Getenv("port")
+	port := os.Getenv("PORT")
 	addr := fmt.Sprintf(":%s", port)
-	fmt.Println(addr)
 	http.ListenAndServe(addr, nil)
-	//test
 }
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
