@@ -1,27 +1,60 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	_ "github.com/lib/pq"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
+	"github.com/spf13/viper"
 )
 
 var bot *linebot.Client
 
 func main() {
-	var err error
-	bot, err = linebot.New("4bd0bc91b1cca5fb1c0a621d856b31fa", "M6fBGbOHaSl0MBDC52eLH1kZrkB54aJxd2vQsk89Lpo5YhR+tzM4cOqtYrow6vQFpq1G4/kxA6iv++CehbPchvdLh4k2DPx2Ozmhpl8zi4+RYE8xanKnplRi7js1DrqfiBuyJm3IzznIXIsDbkGwtAdB04t89/1O/w1cDnyilFU=")
-	log.Println("Bot:", bot, " err:", err)
+	viper.SetConfigName("setting")
+	//viper.SetConfigName("webhook")
+	viper.AddConfigPath("./config")
+	viper.ReadInConfig()
+	viper.WatchConfig()
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		viper.GetString("connset.host"), viper.GetInt("connset.port"), viper.GetString("connset.username"), viper.GetString("connset.password"),
+		viper.GetString("connset.dbname"))
+	fmt.Println(psqlInfo)
+	db, err := sql.Open("postgres", psqlInfo)
+	checkerror(err)
+	rows, err := db.Query("select remark from sys_webhook_config")
+	checkerror(err)
+	for rows.Next() {
+		var remark string
+		rows.Scan(&remark)
+		fmt.Println(remark)
+	}
+	defer db.Close()
 	http.HandleFunc("/callback", callbackHandler)
-	port := os.Getenv("PORT")
+	var port string
+	if viper.GetString("env") == "test" {
+		port = "80"
+	} else {
+		port = os.Getenv("PORT")
+	}
+	println("port:" + port)
 	addr := fmt.Sprintf(":%s", port)
 	http.ListenAndServe(addr, nil)
 }
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	var err error
+	client := r.URL.Query()
+	CNO := client.Get("client")
+	fmt.Println(CNO)
+	secret, TK := checksource(CNO)
+	fmt.Println("secret:" + secret + ",TK=" + TK)
+	bot, err = linebot.New(secret, TK)
 	events, err := bot.ParseRequest(r)
 	if err != nil {
 		if err == linebot.ErrInvalidSignature {
@@ -64,4 +97,20 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+func checksource(client string) (string, string) {
+	/*
+		viper.OnConfigChange(func(e fsnotify.Event) {
+			fmt.Println("Config file changed:", e.Name)
+		})
+	*/
+	return viper.GetString(client + ".Sercet"), viper.GetString(client + ".AccessTK")
+}
+
+func checkerror(err error) {
+	if err != nil {
+		panic(err)
+	}
+
 }
