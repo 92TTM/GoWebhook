@@ -28,6 +28,7 @@ func main() {
 	db, err := sql.Open("postgres", psqlInfo)
 	checkerror(err)
 	rows, err := db.Query("select remark from sys_webhook_config")
+	fmt.Println(err)
 	checkerror(err)
 	for rows.Next() {
 		var remark string
