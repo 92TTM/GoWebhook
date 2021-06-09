@@ -20,8 +20,10 @@ func main() {
 	viper.AddConfigPath("./config")
 	viper.ReadInConfig()
 	viper.WatchConfig()
+	fmt.Println()
+	fmt.Println("DB connation start")
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
+		"password=%s dbname=%s sslmode=require",
 		viper.GetString("connset.host"), viper.GetInt("connset.port"), viper.GetString("connset.username"), viper.GetString("connset.password"),
 		viper.GetString("connset.dbname"))
 	fmt.Println(psqlInfo)
