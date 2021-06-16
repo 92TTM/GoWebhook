@@ -20,14 +20,16 @@ func main() {
 	viper.AddConfigPath("./config")
 	viper.ReadInConfig()
 	viper.WatchConfig()
-	fmt.Println()
-	fmt.Println("DB connation start")
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=require",
-		viper.GetString("connset.host"), viper.GetInt("connset.port"), viper.GetString("connset.username"), viper.GetString("connset.password"),
-		viper.GetString("connset.dbname"))
-	fmt.Println(psqlInfo)
-	db, err := sql.Open("postgres", psqlInfo)
+	var port string
+	var connstring string
+	if viper.GetString("env") == "test" {
+		port = "80"
+		connstring = viper.GetString("databasecon")
+	} else {
+		port = os.Getenv("PORT")
+		connstring = os.Getenv("DATABASE_URL")
+	}
+	db, err := sql.Open("postgres", connstring)
 	checkerror(err)
 	rows, err := db.Query("select remark from sys_webhook_config")
 	fmt.Println(err)
@@ -39,13 +41,6 @@ func main() {
 	}
 	defer db.Close()
 	http.HandleFunc("/callback", callbackHandler)
-	var port string
-	if viper.GetString("env") == "test" {
-		port = "80"
-	} else {
-		port = os.Getenv("PORT")
-	}
-	println("port:" + port)
 	addr := fmt.Sprintf(":%s", port)
 	http.ListenAndServe(addr, nil)
 }
