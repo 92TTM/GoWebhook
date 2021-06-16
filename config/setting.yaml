@@ -8,4 +8,4 @@ TTM0000002:
   Sercet: "f1c4b5ef94c8c2309543b2e40c2df624"
   ID: 2
 
-env: "test"
+env: "prd"
